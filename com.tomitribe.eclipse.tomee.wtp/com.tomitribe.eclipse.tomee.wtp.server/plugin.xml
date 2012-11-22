@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.0"?>
+
+<plugin>
+  <extension point="org.eclipse.wst.server.core.runtimeTypes">
+    <runtimeType
+       id="com.tomitribe.eclipse.tomee.runtime.15"
+       name="%runtimeTypeTomee15Label"
+       description="%runtimeTypeTomee15Description"
+       vendor="%apache"
+       version="7.0"
+       class="com.tomitribe.eclipse.tomee.server.internal.TomcatRuntime">
+       <moduleType
+         types="jst.web"
+         versions="2.2, 2.3, 2.4, 2.5, 3.0"/>
+       <moduleType
+         types="jst.utility"
+         versions="1.0"/>
+       <moduleType
+	     types="jst.ejb"
+	     versions="1.1,2.0,2.1,3.0,3.1"/>
+       <moduleType
+         types="jst.ear"
+         versions="1.4,5.0,6.0">
+       </moduleType>
+         
+    </runtimeType>
+  </extension>
+
+  <extension point="org.eclipse.wst.server.core.runtimeLocators">
+    <runtimeLocator
+       id="com.tomitribe.eclipse.tomee.runtime.locator"
+       typeIds="com.tomitribe.eclipse.tomee.runtime.*"
+       class="com.tomitribe.eclipse.tomee.server.internal.TomcatRuntimeLocator"/>
+  </extension>
+
+  <extension point="org.eclipse.jst.server.core.runtimeClasspathProviders">
+     <runtimeClasspathProvider
+        id="com.tomitribe.eclipse.tomee.runtimeTarget"
+        runtimeTypeIds="com.tomitribe.eclipse.tomee.runtime.*"
+        class="com.tomitribe.eclipse.tomee.server.internal.TomcatRuntimeClasspathProvider"/>
+   </extension>
+
+  <extension point="org.eclipse.wst.server.core.serverTypes">
+     <serverType
+       id="com.tomitribe.eclipse.tomee.15"
+       name="%tomee15ServerType"
+       description="%tomee15ServerDescription"
+       supportsRemoteHosts="false"
+       runtime="true"
+       startTimeout="45000"
+       stopTimeout="15000"
+       initialState="stopped"
+       hasConfiguration="true"
+       launchConfigId="com.tomitribe.eclipse.tomee.core.launchConfigurationType"
+       runtimeTypeId="com.tomitribe.eclipse.tomee.runtime.15"
+       class="com.tomitribe.eclipse.tomee.server.internal.TomcatServer"
+       behaviourClass="com.tomitribe.eclipse.tomee.server.internal.TomcatServerBehaviour">
+     </serverType>
+  </extension>
+
+  <extension point="org.eclipse.wst.server.core.serverLocators">
+    <serverLocator
+       id="com.tomitribe.eclipse.tomee.server.locator"
+       supportsRemoteHosts="false"
+       typeIds="com.tomitribe.eclipse.tomee.*"
+       class="com.tomitribe.eclipse.tomee.server.internal.TomcatServerLocator"/>
+  </extension>
+
+  <extension point="org.eclipse.wst.server.core.launchableAdapters">
+     <launchableAdapter
+        class="com.tomitribe.eclipse.tomee.server.internal.TomcatLaunchableAdapterDelegate"
+        id="com.tomitribe.eclipse.tomee.web"/>
+  </extension>
+
+  <extension point="org.eclipse.debug.core.sourcePathComputers">
+     <sourcePathComputer
+        id="com.tomitribe.eclipse.tomee.core.sourcePathComputer"
+        class="com.tomitribe.eclipse.tomee.source.internal.TomcatSourcePathComputerDelegate"/>
+  </extension>
+
+  <extension point="org.eclipse.debug.core.launchConfigurationTypes">
+     <launchConfigurationType
+        id="com.tomitribe.eclipse.tomee.core.launchConfigurationType"
+        name="%tomcatLaunchConfigurationType"
+        delegate="com.tomitribe.eclipse.tomee.server.internal.TomcatLaunchConfigurationDelegate"
+        modes="run, debug, profile"
+        sourceLocatorId="org.eclipse.jdt.launching.sourceLocator.JavaSourceLookupDirector"
+        sourcePathComputerId="com.tomitribe.eclipse.tomee.core.sourcePathComputer"/>
+  </extension>
+
+  <extension point="org.eclipse.wst.server.core.publishTasks">
+     <publishTask
+        id="com.tomitribe.eclipse.tomee.core.publishTask"
+        typeIds="com.tomitribe.eclipse.tomee.*"
+        class="com.tomitribe.eclipse.tomee.server.internal.PublishTask"/>
+  </extension>
+
+  <extension point="org.eclipse.wst.common.project.facet.core.runtimes">
+    <runtime-component-type
+       id="com.tomitribe.eclipse.tomee.server.tomee"/>
+
+    <runtime-component-version
+       type="com.tomitribe.eclipse.tomee.server.tomee"
+       version="1.5"/>
+
+    <adapter>
+      <runtime-component
+         id="com.tomitribe.eclipse.tomee.server.tomee"/>
+      <factory
+         class="org.eclipse.jst.server.core.internal.RuntimeClasspathProvider$Factory"/>
+      <type
+         class="org.eclipse.jst.common.project.facet.core.IClasspathProvider"/>
+    </adapter>
+
+    <supported>
+      <runtime-component
+         id="com.tomitribe.eclipse.tomee.server.tomee"
+         version="1.5"/>
+      <facet
+         id="jst.web"
+         version="2.2,2.3,2.4,2.5,3.0"/>
+      <facet
+         id="jst.webfragment"
+         version="3.0"/>
+      <facet
+         id="jst.utility"
+         version="1.0"/>
+      <facet
+         id="jst.ejb"
+         version="1.1,2.0,2.1,3.0,3.1"/>
+      <facet
+         id="jst.java"
+         version="1.4,5.0,6.0"/>
+      <facet
+         id="jst.ear"
+         version="1.4,5.0,6.0"/>
+    </supported>
+  </extension>
+  
+  <extension point="org.eclipse.wst.common.project.facet.core.defaultFacets">
+    <default-facets>
+      <runtime-component id="org.eclipse.jst.server.tomcat"/>
+      <facet id="wst.jsdt.web" version="1.0"/>
+    </default-facets>
+  </extension>
+  
+  <extension point="org.eclipse.jst.server.core.runtimeFacetMappings">
+    <runtimeFacetMapping
+      runtimeTypeId="com.tomitribe.eclipse.tomee.runtime.15"
+      runtime-component="org.eclipse.jst.server.tomcat"
+      version="1.5"/>
+  </extension>
+
+  <!--<extension point="org.eclipse.wst.server.core.installableRuntimes">
+    <runtime
+        id="org.eclipse.jst.server.tomcat.runtime.70"
+        licenseUrl="http://www.apache.org/licenses/LICENSE-2.0.txt"
+        archiveUrl="http://archive.apache.org/dist/tomcat/tomcat-7/v7.0.12/bin/apache-tomcat-7.0.12-windows-x86.zip"
+        archivePath="apache-tomcat-7.0.12"
+        archiveSize="8118755"
+        fileCount="544"
+        os="win32"/>
+    <runtime
+        id="org.eclipse.jst.server.tomcat.runtime.70"
+        licenseUrl="http://www.apache.org/licenses/LICENSE-2.0.txt"
+        archiveUrl="http://archive.apache.org/dist/tomcat/tomcat-7/v7.0.12/bin/apache-tomcat-7.0.12.tar.gz"
+        archivePath="apache-tomcat-7.0.12"
+        archiveSize="7205567"
+        fileCount="540"
+        os="linux"/>
+  </extension>-->
+</plugin>

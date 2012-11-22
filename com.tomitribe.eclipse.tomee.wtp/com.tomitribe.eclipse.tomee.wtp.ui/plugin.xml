@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.0"?>
+
+<plugin>
+   <extension point="org.eclipse.wst.server.ui.serverImages">
+      <image
+         id="com.tomitribe.eclipse.tomee.15"
+         icon="icons/obj16/tomcat.gif"
+         typeIds="com.tomitribe.eclipse.tomee.runtime.15"/>
+
+      <image
+         id="com.tomitribe.eclipse.tomee.15"
+         icon="icons/obj16/tomcat.gif"
+         typeIds="com.tomitribe.eclipse.tomee.15"/>
+   </extension>
+   
+   <extension point="org.eclipse.core.expressions.propertyTesters">
+      <propertyTester
+         id="com.tomitribe.eclipse.tomee.ui.propertyTester"
+         namespace="com.tomitribe.eclipse.tomee.ui"
+         properties="hasConfiguration"
+         type="java.lang.Object"
+         class="com.tomitribe.eclipse.tomee.ui.internal.ConfigurationPropertyTester">
+      </propertyTester>
+   </extension>
+
+   <extension point="org.eclipse.wst.server.ui.editorPages">
+      <page
+         id="com.tomitribe.eclipse.tomee.configuration.editor.webmodule"
+         order="20"
+         name="%configurationEditorWebModulesPage"
+         typeIds="com.tomitribe.eclipse.tomee.*"
+         class="com.tomitribe.eclipse.tomee.ui.internal.editor.ConfigurationWebModuleEditorPart">
+         <enablement>
+           <test property="com.tomitribe.eclipse.tomee.ui.hasConfiguration" value="true"/>
+         </enablement>
+      </page>
+   </extension>
+
+   <extension point="org.eclipse.wst.server.ui.editorPageSections">
+      <section
+         id="com.tomitribe.eclipse.tomee.server.editor.instance"
+         order="0"
+         insertionId="org.eclipse.wst.server.editor.overview.left"
+         typeIds="com.tomitribe.eclipse.tomee.*"
+         class="com.tomitribe.eclipse.tomee.ui.internal.editor.ServerLocationEditorSection"/>
+      <section
+         id="com.tomitribe.eclipse.tomee.server.editor.general"
+         order="5"
+         insertionId="org.eclipse.wst.server.editor.overview.left"
+         typeIds="com.tomitribe.eclipse.tomee.*"
+         class="com.tomitribe.eclipse.tomee.ui.internal.editor.ServerGeneralEditorSection"/>
+      <section
+         id="com.tomitribe.eclipse.tomee.configuration.editor.port"
+         order="10"
+         insertionId="org.eclipse.wst.server.editor.overview.right"
+         typeIds="com.tomitribe.eclipse.tomee.*"
+         class="com.tomitribe.eclipse.tomee.ui.internal.editor.ConfigurationPortEditorSection">
+         <enablement>
+           <test property="com.tomitribe.eclipse.tomee.ui.hasConfiguration" value="true"/>
+         </enablement>
+      </section>
+      <section
+         id="com.tomitribe.eclipse.tomee.configuration.editor.mime"
+         order="20"
+         insertionId="org.eclipse.wst.server.editor.overview.right"
+         typeIds="com.tomitribe.eclipse.tomee.*"
+         class="com.tomitribe.eclipse.tomee.ui.internal.editor.ConfigurationMimeEditorSection">
+         <enablement>
+           <test property="com.tomitribe.eclipse.tomee.ui.hasConfiguration" value="true"/>
+         </enablement>
+      </section>
+   </extension>
+   
+   <extension point="org.eclipse.wst.server.ui.wizardFragments">
+      <fragment
+         id="com.tomitribe.eclipse.tomee.runtime.15"
+         typeIds="com.tomitribe.eclipse.tomee.runtime.15"
+         class="com.tomitribe.eclipse.tomee.ui.internal.TomcatRuntimeWizardFragment"/>
+   </extension>
+
+  <extension point="org.eclipse.debug.ui.launchConfigurationTypeImages">
+    <launchConfigurationTypeImage
+      id="com.tomitribe.eclipse.tomee.ui.launchConfigurationTypeImage"
+      configTypeID="com.tomitribe.eclipse.tomee.core.launchConfigurationType"
+      icon="icons/obj16/tomcat.gif">
+    </launchConfigurationTypeImage>
+  </extension>
+
+  <extension point="org.eclipse.debug.ui.launchConfigurationTabGroups">
+    <launchConfigurationTabGroup
+      id="com.tomitribe.eclipse.tomee.ui.launchConfigurationTabGroup"
+      type="com.tomitribe.eclipse.tomee.core.launchConfigurationType"
+      class="com.tomitribe.eclipse.tomee.ui.internal.TomcatLaunchConfigurationTabGroup">
+    </launchConfigurationTabGroup>
+  </extension>
+
+  <extension point="org.eclipse.wst.common.project.facet.ui.images">
+    <image runtime-component-type="org.eclipse.jst.server.tomcat"
+      path="icons/obj16/tomcat.gif"/>
+  </extension>
+
+  <extension point="org.eclipse.wst.common.project.facet.core.runtimes">
+    <adapter>
+      <runtime-component id="org.eclipse.jst.server.tomcat"/>
+      <factory class="org.eclipse.jst.server.ui.internal.RuntimeLabelProvider$Factory"/>
+      <type class="org.eclipse.wst.common.project.facet.ui.IRuntimeComponentLabelProvider"/>
+    </adapter>
+  </extension>
+
+  <extension point="org.eclipse.ui.popupMenus">
+    <objectContribution
+      adaptable="true"
+      id="com.tomitribe.eclipse.tomee.ui.serveractions"
+      objectClass="org.eclipse.wst.server.core.IServer">
+      <visibility>
+          <objectState name="serverType" value="com.tomitribe.eclipse.tomee.*"/>
+      </visibility>
+      <action 
+        class="com.tomitribe.eclipse.tomee.ui.internal.actions.CleanWorkDirAction"
+        enablesFor="1"
+        id="com.tomitribe.eclipse.tomee.ui.cleanserverworkdir"
+        label="%cleanTomcatWorkDir">
+      </action>
+    </objectContribution>
+    <objectContribution
+      adaptable="true"
+      id="com.tomitribe.eclipse.tomee.ui.serveractions"
+      objectClass="org.eclipse.wst.server.ui.internal.view.servers.ModuleServer">
+      <visibility>
+        <and>
+          <objectState name="serverType" value="com.tomitribe.eclipse.tomee.*"/>
+          <objectState name="moduleType" value="jst.web"/>
+        </and>
+      </visibility>
+      <action
+        class="com.tomitribe.eclipse.tomee.ui.internal.actions.CleanWorkDirAction"
+        enablesFor="1"
+        id="com.tomitribe.eclipse.tomee.ui.cleanmoduleworkdir"
+        label="%cleanTomcatModuleWorkDir">
+      </action>
+    </objectContribution>
+  </extension>
+
+  <extension point="org.eclipse.wst.server.core.publishers">
+     <publisher
+        id="com.tomitribe.eclipse.tomee.ui.context"
+        typeIds="com.tomitribe.eclipse.tomee.*"
+        name="%publisherContextFixLabel"
+        description="%publisherContextFixDescription"
+        order=""
+        class="com.tomitribe.eclipse.tomee.ui.internal.ContextPublisherDelegate"/>
+  </extension>
+</plugin>

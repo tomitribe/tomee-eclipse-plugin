@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<site>
+   <description name="Tomitribe Apache TomEE WTP Adapter Update Site" url="http://www.jrg.me.uk/tomitribe/update-site">
+      
+   </description>
+   <feature url="features/com.tomitribe.eclipse.tomee.wtp.feature_1.0.0.qualifier.jar" id="com.tomitribe.eclipse.tomee.wtp.feature" version="1.0.0.qualifier">
+      <category name="tomee"/>
+   </feature>
+   <category-def name="tomee" label="Apache TomEE"/>
+</site>

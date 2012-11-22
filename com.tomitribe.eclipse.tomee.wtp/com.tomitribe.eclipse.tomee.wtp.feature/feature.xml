@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feature
+      id="com.tomitribe.eclipse.tomee.wtp.feature"
+      label="Tomitribe Apache TomEE WTP Adapter"
+      version="1.0.0.qualifier">
+
+   <description>
+      Tomitribe Apache TomEE WTP adapter
+   </description>
+
+   <copyright>
+      Copyright 2012 Tomitribe Inc
+   </copyright>
+
+   <plugin
+         id="com.tomitribe.eclipse.tomee.wtp.server"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+   <plugin
+         id="com.tomitribe.eclipse.tomee.wtp.ui"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         unpack="false"/>
+
+</feature>
