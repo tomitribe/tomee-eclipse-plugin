@@ -63,6 +63,10 @@ public class TomEE15Configuration extends TomcatConfiguration {
 
 	protected String propertiesFile;
 	
+	protected String systemPropertiesFile;
+	
+	protected Document tomeeXmlDocument;
+	
 	protected static final Map<String, String> protocolHandlerMap = new HashMap<String, String>();
 	static {
 		protocolHandlerMap.put("org.apache.coyote.http11.Http11Protocol", "HTTP/1.1");
@@ -274,6 +278,21 @@ public class TomEE15Configuration extends TomcatConfiguration {
 				propertiesFile = TomcatVersionHelper.getFileContents(new FileInputStream(file));
 			else
 				propertiesFile = null;
+			
+			
+			file = path.append("system.properties").toFile();
+			if (file.exists())
+				systemPropertiesFile = TomcatVersionHelper.getFileContents(new FileInputStream(file));
+			else
+				systemPropertiesFile = null;
+			
+			file = path.append("tomee.xml").toFile();
+			if (file.exists())
+				tomeeXmlDocument = XMLUtil.getDocumentBuilder().parse(new InputSource(new FileInputStream(file)));
+			else 
+				tomeeXmlDocument = null;
+			
+			
 			monitor.worked(1);
 			
 			if (monitor.isCanceled())
@@ -417,6 +436,16 @@ public class TomEE15Configuration extends TomcatConfiguration {
 				bw.write(propertiesFile);
 				bw.close();
 			}
+			
+			if (systemPropertiesFile != null && forceDirty) {
+				BufferedWriter bw = new BufferedWriter(new FileWriter(path.append("system.properties").toFile()));
+				bw.write(systemPropertiesFile);
+				bw.close();
+			}
+			
+			if (forceDirty && tomeeXmlDocument != null)
+				XMLUtil.save(path.append("tomee.xml").toOSString(), tomeeXmlDocument);
+
 			monitor.worked(1);
 			
 			if (monitor.isCanceled())
@@ -510,6 +539,29 @@ public class TomEE15Configuration extends TomcatConfiguration {
 					file.create(in, true, ProgressUtil.getSubMonitorFor(monitor, 200));
 			} else
 				monitor.worked(200);
+			
+
+			if (systemPropertiesFile != null) {
+				in = new ByteArrayInputStream(propertiesFile.getBytes());
+				file = folder.getFile("system.properties");
+				if (file.exists())
+					monitor.worked(200);
+					//file.setContents(in, true, true, ProgressUtil.getSubMonitorFor(monitor, 200));
+				else
+					file.create(in, true, ProgressUtil.getSubMonitorFor(monitor, 200));
+			} else
+				monitor.worked(200);
+			
+			if (tomeeXmlDocument != null) {
+				data = XMLUtil.getContents(tomeeXmlDocument);
+				in = new ByteArrayInputStream(data);
+				file = folder.getFile("tomee.xml");
+				if (file.exists())
+					monitor.worked(200);
+					//file.setContents(in, true, true, ProgressUtil.getSubMonitorFor(monitor, 200));
+				else
+					file.create(in, true, ProgressUtil.getSubMonitorFor(monitor, 200));
+			}
 			
 			if (monitor.isCanceled())
 				return;
