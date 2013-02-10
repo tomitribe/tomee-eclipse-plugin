@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.0"?>
+<plugin>
+   <extension
+         id="validatorBuilder"
+         name="TomEE Validator Builder"
+         point="org.eclipse.core.resources.builders">
+      <builder
+            hasNature="true">
+         <run
+               class="com.tomitribe.eclipse.tomee.validator.builder.TomEEValidatorBuilder">
+         </run>
+      </builder>
+   </extension>
+   <extension
+         id="validatorNature"
+         name="TomEE Validator Nature"
+         point="org.eclipse.core.resources.natures">
+      <runtime>
+         <run
+               class="com.tomitribe.eclipse.tomee.validator.builder.TomEEValidatorNature">
+         </run>
+      </runtime>
+      <builder
+            id="com.tomitribe.eclipse.tomee.wtp.validator.validatorBuilder">
+      </builder>
+   </extension>
+   <extension
+         point="org.eclipse.ui.popupMenus">
+      <objectContribution
+            adaptable="true"
+            id="com.tomitribe.eclipse.tomee.wtp.validator.contribution1"
+            nameFilter="*"
+            objectClass="org.eclipse.core.resources.IProject">
+         <action
+               class="com.tomitribe.eclipse.tomee.validator.builder.ToggleNatureAction"
+               enablesFor="+"
+               id="com.tomitribe.eclipse.tomee.wtp.validator.addRemoveNatureAction"
+               label="Add/Remove Sample Nature"
+               menubarPath="additions">
+         </action>
+      </objectContribution>
+   </extension>
+   <extension
+         id="xmlProblem"
+         name="XML Problem"
+         point="org.eclipse.core.resources.markers">
+      <super
+            type="org.eclipse.core.resources.problemmarker">
+      </super>
+      <persistent
+            value="true">
+      </persistent>
+   </extension>
+</plugin>

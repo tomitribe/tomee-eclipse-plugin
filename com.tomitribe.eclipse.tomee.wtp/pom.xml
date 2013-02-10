@@ -91,5 +91,6 @@
 		<module>com.tomitribe.eclipse.tomee.wtp.ui</module>
 		<module>com.tomitribe.eclipse.tomee.wtp.feature</module>
 		<module>com.tomitribe.eclipse.tomee.wtp.site</module>
-	</modules>
+    <module>com.tomitribe.eclipse.tomee.wtp.deployer-webapp</module>
+  </modules>
 </project>

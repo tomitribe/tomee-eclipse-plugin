@@ -204,6 +204,7 @@ public class TomcatServerBehaviour extends ServerBehaviourDelegate implements IT
 
 	protected void setServerStarted() {
 		setServerState(IServer.STATE_STARTED);
+		doFullPublish();
 	}
 
 	protected void stopImpl() {
@@ -216,6 +217,7 @@ public class TomcatServerBehaviour extends ServerBehaviourDelegate implements IT
 			processListener = null;
 		}
 		setServerState(IServer.STATE_STOPPED);
+		cleanup();
 	}
 
 	protected void publishServer(int kind, IProgressMonitor monitor) throws CoreException {
@@ -261,48 +263,74 @@ public class TomcatServerBehaviour extends ServerBehaviourDelegate implements IT
 	 * Publishes the given module to the server.
 	 */
 	protected void publishModule(int kind, int deltaKind, IModule[] moduleTree, IProgressMonitor monitor) throws CoreException {
-		if (getServer().getServerState() != IServer.STATE_STOPPED) {
-			if (deltaKind == ServerBehaviourDelegate.ADDED || deltaKind == ServerBehaviourDelegate.REMOVED)
-				setServerRestartState(true);
-		}
-		if (getTomcatServer().isTestEnvironment())
-			return;
+		if ("jst.ear".equals(moduleTree[0].getModuleType().getId())
+				|| "jst.ejb".equals(moduleTree[0].getModuleType().getId())) {
+			publishEar(kind, deltaKind, moduleTree, monitor);
+		} else {
+			if (getServer().getServerState() != IServer.STATE_STOPPED) {
+				if (deltaKind == ServerBehaviourDelegate.ADDED || deltaKind == ServerBehaviourDelegate.REMOVED)
+					setServerRestartState(true);
+			}
+			if (getTomcatServer().isTestEnvironment())
+				return;
 
-		Properties p = loadModulePublishLocations();
-		
-		PublishHelper helper = new PublishHelper(getRuntimeBaseDirectory().append("temp").toFile());
-		// If parent web module
-		if (moduleTree.length == 1) {
-			publishDir(deltaKind, p, moduleTree, helper, monitor);
-		}
-		// Else a child module
-		else {
-			// Try to determine the URI for the child module
-			IWebModule webModule = (IWebModule)moduleTree[0].loadAdapter(IWebModule.class, monitor);
-			String childURI = null;
-			if (webModule != null) {
-				childURI = webModule.getURI(moduleTree[1]);
+			Properties p = loadModulePublishLocations();
+			
+			PublishHelper helper = new PublishHelper(getRuntimeBaseDirectory().append("temp").toFile());
+			// If parent web module
+			if (moduleTree.length == 1) {
+				publishDir(deltaKind, p, moduleTree, helper, monitor);
 			}
-			// Try to determine if child is binary
-			IJ2EEModule childModule = (IJ2EEModule)moduleTree[1].loadAdapter(IJ2EEModule.class, monitor);
-			boolean isBinary = false;
-			if (childModule != null) {
-				isBinary = childModule.isBinary();
-			}
-
-			if (isBinary) {
-				publishArchiveModule(childURI, kind, deltaKind, p, moduleTree, helper, monitor);
-			}
+			// Else a child module
 			else {
-				publishJar(childURI, kind, deltaKind, p, moduleTree, helper, monitor);
+				// Try to determine the URI for the child module
+				IWebModule webModule = (IWebModule)moduleTree[0].loadAdapter(IWebModule.class, monitor);
+				String childURI = null;
+				if (webModule != null) {
+					childURI = webModule.getURI(moduleTree[1]);
+				}
+				// Try to determine if child is binary
+				IJ2EEModule childModule = (IJ2EEModule)moduleTree[1].loadAdapter(IJ2EEModule.class, monitor);
+				boolean isBinary = false;
+				if (childModule != null) {
+					isBinary = childModule.isBinary();
+				}
+
+				if (isBinary) {
+					publishArchiveModule(childURI, kind, deltaKind, p, moduleTree, helper, monitor);
+				}
+				else {
+					publishJar(childURI, kind, deltaKind, p, moduleTree, helper, monitor);
+				}
 			}
+			
+			setModulePublishState(moduleTree, IServer.PUBLISH_STATE_NONE);
+			
+			saveModulePublishLocations(p);
 		}
-		
-		setModulePublishState(moduleTree, IServer.PUBLISH_STATE_NONE);
-		
-		saveModulePublishLocations(p);
 	}
 	
+	private void publishEar(int kind, int deltaKind, IModule[] modules, IProgressMonitor monitor) {
+		if (IServer.STATE_STARTED != getServer().getServerState()) {
+			for (IModule module : modules) {
+				if (deltaKind == REMOVED) {
+					String jarFile = publishedModules.get(module);
+					if (jarFile != null) {
+						new File(jarFile).delete();
+					}
+					
+					publishedModules.remove(module);
+				} else {
+					publishedModules.put(module, null);
+				}
+			}
+		} else {
+			for (IModule module : modules) {
+				doPublish(module, deltaKind);
+			}
+		}
+	}
+
 	/**
 	 * Publish a web module.
 	 * 
@@ -331,38 +359,33 @@ public class TomcatServerBehaviour extends ServerBehaviourDelegate implements IT
 				p.remove(module[0].getId());
 			}
 		} else {
-//			if ("jst.ear".equals(module[0].getModuleType().getId())
-//					|| "jst.ejb".equals(module[0].getModuleType().getId())) {
-//				exportModule(module[0], getServerDeployDirectory().toFile().getAbsolutePath());
-//			} else {
-				IPath path = getModuleDeployDirectory(module[0]);
-				IModuleResource[] mr = getResources(module);
-				IPath [] jarPaths = null;
-				IWebModule webModule = (IWebModule)module[0].loadAdapter(IWebModule.class, monitor);
-				IModule [] childModules = getServer().getChildModules(module, monitor);
-				if (childModules != null && childModules.length > 0) {
-					jarPaths = new IPath[childModules.length];
-					for (int i = 0; i < childModules.length; i++) {
-						if (webModule != null) {
-							jarPaths[i] = new Path(webModule.getURI(childModules[i]));
+			IPath path = getModuleDeployDirectory(module[0]);
+			IModuleResource[] mr = getResources(module);
+			IPath [] jarPaths = null;
+			IWebModule webModule = (IWebModule)module[0].loadAdapter(IWebModule.class, monitor);
+			IModule [] childModules = getServer().getChildModules(module, monitor);
+			if (childModules != null && childModules.length > 0) {
+				jarPaths = new IPath[childModules.length];
+				for (int i = 0; i < childModules.length; i++) {
+					if (webModule != null) {
+						jarPaths[i] = new Path(webModule.getURI(childModules[i]));
+					}
+					else {
+						IJ2EEModule childModule = (IJ2EEModule)childModules[i].loadAdapter(IJ2EEModule.class, monitor);
+						if (childModule != null && childModule.isBinary()) {
+							jarPaths[i] = new Path("WEB-INF/lib").append(childModules[i].getName());
 						}
 						else {
-							IJ2EEModule childModule = (IJ2EEModule)childModules[i].loadAdapter(IJ2EEModule.class, monitor);
-							if (childModule != null && childModule.isBinary()) {
-								jarPaths[i] = new Path("WEB-INF/lib").append(childModules[i].getName());
-							}
-							else {
-								jarPaths[i] = new Path("WEB-INF/lib").append(childModules[i].getName() + ".jar");
-							}
+							jarPaths[i] = new Path("WEB-INF/lib").append(childModules[i].getName() + ".jar");
 						}
 					}
 				}
-				IStatus[] stat = helper.publishSmart(mr, path, jarPaths, monitor);
-				PublishOperation2.addArrayToList(status, stat);
-				p.put(module[0].getId(), path.toOSString());
-//			}
-			
+			}
+			IStatus[] stat = helper.publishSmart(mr, path, jarPaths, monitor);
+			PublishOperation2.addArrayToList(status, stat);
+			p.put(module[0].getId(), path.toOSString());
 		}
+
 		PublishOperation2.throwException(status);
 	}
 
@@ -548,6 +571,8 @@ public class TomcatServerBehaviour extends ServerBehaviourDelegate implements IT
 			
 			contextRoots.add(contextRoot);
 		}
+		
+		new TomEEDeployerInstaller().installDeployer(getTomcatServer().getRuntimeBaseDirectory());
 		
 		setServerRestartState(false);
 		setServerState(IServer.STATE_STARTING);
@@ -1194,25 +1219,81 @@ public class TomcatServerBehaviour extends ServerBehaviourDelegate implements IT
 		setServerRestartState(state);
 	}
 	
-	protected void exportModule(IModule module, String folder) {
+	protected String exportModule(IModule module) {
 		IDataModel model;
-		File file;
+		File tempJarFile;
 		
 		try {
 			if ("jst.ear".equals(module.getModuleType().getId())) {
 				model = DataModelFactory.createDataModel(new EARComponentExportDataModelProvider());
-				file = new File(folder, module.getName() + ".ear");
-			} else if ("jst.ejb".equals(module.getModuleType().getId())) {
-				model = DataModelFactory.createDataModel(new EJBComponentExportDataModelProvider());
-				file = new File(folder, module.getName() + ".jar");
+				tempJarFile = File.createTempFile("oejb", ".ear");
 			} else {
-				return;
+				model = DataModelFactory.createDataModel(new EJBComponentExportDataModelProvider());
+				tempJarFile = File.createTempFile("oejb", ".jar");
 			}
 
 			model.setProperty(IEJBComponentExportDataModelProperties.PROJECT_NAME, module.getProject().getName());
-			model.setProperty(IEJBComponentExportDataModelProperties.ARCHIVE_DESTINATION, file.getAbsolutePath());
+			model.setProperty(IEJBComponentExportDataModelProperties.ARCHIVE_DESTINATION, tempJarFile.getAbsolutePath());
 			model.getDefaultOperation().execute(null, null);
+
+			return tempJarFile.getAbsolutePath();
 		} catch (Exception e) {
+			return null;
+		}
+	}
+	
+	private void doFullPublish() {
+		Iterator<IModule> iterator = publishedModules.keySet().iterator();
+		while (iterator.hasNext()) {
+			IModule module = (IModule) iterator.next();
+			doPublish(module, ADDED);
+		}
+		
+		if (IServer.STATE_STARTED == getServer().getServerState()) {
+			setServerPublishState(IServer.PUBLISH_STATE_NONE);
+		}
+	}
+	
+	private void cleanup() {
+		Iterator<IModule> iterator = publishedModules.keySet().iterator();
+		while (iterator.hasNext()) {
+			IModule module = (IModule) iterator.next();
+			String publishedFile = publishedModules.get(module);
+			if (publishedFile != null) {
+				new File(publishedFile).delete();
+			}
+		}
+		
+		publishedModules.clear();
+		setServerPublishState(IServer.PUBLISH_STATE_FULL);
+	}
+	
+	private void doPublish(IModule module, int kind) {
+		
+		// if module already published, try an undeploy first, and cleanup temp file
+		String jarFile = publishedModules.get(module);
+		if (jarFile != null) {
+			// undeploy
+			new ServerDeployer(getServer().getLaunch()).undeploy(jarFile);
+			
+			// TODO: delete file(s)
+			
+			// remove module from list
+			publishedModules.remove(module);
+		}
+		
+		if (kind == REMOVED) {
+			return;
+		}
+		
+		// TODO: now do the export
+		String newJarFile = exportModule(module);
+		
+		// TODO: publish the new export
+		if (newJarFile != null) {
+			String path = ""; // serverDeployer.deploy(newJarFile);
+			publishedModules.put(module, path);
+			// TODO: setModulePublishState(new IModule[] { module }, IServer.PUBLISH_STATE_NONE);
 		}
 	}
 }
