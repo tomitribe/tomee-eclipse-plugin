@@ -536,7 +536,7 @@ public class TomcatServer extends ServerDelegate implements ITomcatServer, ITomc
 			int size = add.length;
 			for (int i = 0; i < size; i++) {
 				IModule module3 = add[i];
-				//if ("jst.web".equals(module3.getModuleType())) {
+				if ("jst.web".equals(module3.getModuleType())) {
 					IWebModule module = (IWebModule) module3.loadAdapter(IWebModule.class, monitor);
 					String contextRoot = module.getContextRoot();
 					if (contextRoot != null && !contextRoot.startsWith("/") && contextRoot.length() > 0)
@@ -544,7 +544,7 @@ public class TomcatServer extends ServerDelegate implements ITomcatServer, ITomc
 					String docBase = config.getDocBasePrefix() + module3.getName();
 					WebModule module2 = new WebModule(contextRoot, docBase, module3.getId(), isModulesReloadableByDefault());
 					config.addWebModule(-1, module2);
-				//}
+				}
 			}
 		}
 		

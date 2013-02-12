@@ -265,7 +265,7 @@ public class TomcatServerBehaviour extends ServerBehaviourDelegate implements IT
 	protected void publishModule(int kind, int deltaKind, IModule[] moduleTree, IProgressMonitor monitor) throws CoreException {
 		if ("jst.ear".equals(moduleTree[0].getModuleType().getId())
 				|| "jst.ejb".equals(moduleTree[0].getModuleType().getId())) {
-			publishEar(kind, deltaKind, moduleTree, monitor);
+			publishEar(kind, deltaKind, moduleTree[0], monitor);
 		} else {
 			if (getServer().getServerState() != IServer.STATE_STOPPED) {
 				if (deltaKind == ServerBehaviourDelegate.ADDED || deltaKind == ServerBehaviourDelegate.REMOVED)
@@ -310,24 +310,20 @@ public class TomcatServerBehaviour extends ServerBehaviourDelegate implements IT
 		}
 	}
 	
-	private void publishEar(int kind, int deltaKind, IModule[] modules, IProgressMonitor monitor) {
+	private void publishEar(int kind, int deltaKind, IModule module, IProgressMonitor monitor) {
 		if (IServer.STATE_STARTED != getServer().getServerState()) {
-			for (IModule module : modules) {
-				if (deltaKind == REMOVED) {
-					String jarFile = publishedModules.get(module);
-					if (jarFile != null) {
-						new File(jarFile).delete();
-					}
-					
-					publishedModules.remove(module);
-				} else {
-					publishedModules.put(module, null);
+			if (deltaKind == REMOVED) {
+				String jarFile = publishedModules.get(module);
+				if (jarFile != null) {
+					new File(jarFile).delete();
 				}
+				
+				publishedModules.remove(module);
+			} else {
+				publishedModules.put(module, null);
 			}
 		} else {
-			for (IModule module : modules) {
-				doPublish(module, deltaKind);
-			}
+			doPublish(module, deltaKind);
 		}
 	}
 
@@ -1268,13 +1264,25 @@ public class TomcatServerBehaviour extends ServerBehaviourDelegate implements IT
 		setServerPublishState(IServer.PUBLISH_STATE_FULL);
 	}
 	
+	// TODO: call the server deployer here
 	private void doPublish(IModule module, int kind) {
+
+		File baseDir = getServer().getRuntime().getLocation().toFile();
+		int port = 8080;
+		
+		try {
+			TomcatConfiguration configuration = getTomcatConfiguration();
+			port = configuration.getMainPort().getPort();
+		} catch (Exception e) {
+		}
+		
+		ServerDeployer serverDeployer = new ServerDeployer(baseDir, port);
 		
 		// if module already published, try an undeploy first, and cleanup temp file
 		String jarFile = publishedModules.get(module);
 		if (jarFile != null) {
 			// undeploy
-			new ServerDeployer(getServer().getLaunch()).undeploy(jarFile);
+			serverDeployer.undeploy(jarFile);
 			
 			// TODO: delete file(s)
 			
@@ -1286,14 +1294,14 @@ public class TomcatServerBehaviour extends ServerBehaviourDelegate implements IT
 			return;
 		}
 		
-		// TODO: now do the export
+		// now do the export
 		String newJarFile = exportModule(module);
 		
-		// TODO: publish the new export
+		// publish the new export
 		if (newJarFile != null) {
-			String path = ""; // serverDeployer.deploy(newJarFile);
+			String path = serverDeployer.deploy(newJarFile);
 			publishedModules.put(module, path);
-			// TODO: setModulePublishState(new IModule[] { module }, IServer.PUBLISH_STATE_NONE);
+			// setModulePublishState(new IModule[] { module }, IServer.PUBLISH_STATE_NONE);
 		}
 	}
 }
